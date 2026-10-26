@@ -15,9 +15,12 @@ export function covers(order: Order, offer: Offer) {
   return true;
 }
 
-/** The first order from the top that covers the offer, or none (then Ziki asks the owner). */
+/**
+ * Which order answers an offer. "Turn down" always wins, so nothing can override a "never". Otherwise the newest order
+ * wins (orders are kept newest first), so a rule learned from an answer beats an older default. No match: ask the owner.
+ */
 export function decide(orders: Order[], offer: Offer): { action: OrderAction; order?: Order } {
-  const order = orders.find((o) => covers(o, offer));
+  const order = orders.find((o) => o.action === "never" && covers(o, offer)) ?? orders.find((o) => covers(o, offer));
   return order ? { action: order.action, order } : { action: "ask" };
 }
 

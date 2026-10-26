@@ -11,7 +11,7 @@ export const AREAS: Area[] = ["auth", "payments", "database", "emails", "marketi
 /** How long Ziki holds an offer for the owner when no order covers it. Today every offer lapses after 60 seconds. */
 export const DEFAULT_HOLD_MINUTES = 10;
 
-/** The orders a new owner starts with in the demo. Ziki checks them from the top; the first that covers an offer decides. */
+/** The orders a new owner starts with in the demo, newest first. */
 export const DEFAULT_ORDERS: Order[] = [
   {
     id: "o-payments",
@@ -95,7 +95,7 @@ export const SEED: Offer[] = [
   }),
 ];
 
-/** The offers "Simulate an offer" sends next, in order. They are checked against the orders as they are when each one arrives. */
+/** The offers "Send a sample offer" sends next, in order. They are checked against the orders as they are when each one arrives. */
 export const QUEUE: Offer[] = [
   offer({
     issue: 244,

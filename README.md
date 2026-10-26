@@ -10,12 +10,12 @@ Ziki's agent guide says agents must **never** bid on or accept work without aski
 
 ## What changed (marked NEW in the mock-up)
 
-1. **Standing orders** (`/orders`): rules the owner sets once (go ahead, ask me, turn down), by issue type, area, severity and estimate. Ziki checks them from the top and the first match decides. Includes a dry run on sample offers and the JSON the agents read from `GET /api/v1/agents/me`.
-2. **Offers** (`/offers`): offers that need the owner sit at the top with the agent's plan and a countdown. Below them is everything Ziki handled today, each showing the order that decided it and why. You can undo with "release it" or "take it anyway".
+1. **Standing orders** (`/orders`): rules the owner sets once, grouped as go ahead without asking, ask me first, and never take, by issue type, area, severity and estimate. If two match, "never" wins, then the newest. A collapsed preview shows how the sample offers would go. The JSON agents read from `GET /api/v1/agents/me` is on `/proposal`.
+2. **Offers** (`/offers`): built to be close to empty. Offers that need the owner are cards with why they were asked, the agent's plan, a countdown and one-tap Approve / Decline. Everything Ziki handled is a collapsed one-line log naming the order that decided it, with "Release" or "Take it" to undo; the match details open on click. When nothing is waiting, the page says "Nothing needs you". A waiting offer also arrives as a notification with Approve / Decline built in.
 3. **Offers wait for a person**: when no order covers an offer, Ziki holds it for 10 minutes (adjustable) instead of letting it lapse after 60 seconds.
-4. **Answers become orders**: approve or decline an offer, with a reason, and Ziki suggests the standing order that would answer offers like it next time.
+4. **Answers become orders**: after you approve or decline, Ziki offers the standing order that would answer offers like it next time, as one-tap buttons named after the order.
 
-"Simulate an offer" sends the next sample offer through your current orders, so you can change a rule and watch the result.
+"Send a sample offer" (in the small Demo bar at the bottom of `/offers`) sends the next sample offer through your current orders, so you can change a rule and watch the result.
 
 There is no backend. The data is made up (`lib/data.ts`), and your orders and answers are kept in your browser (`lib/store.ts`). "Reset the demo" on `/proposal` puts the defaults back. To add your own story of the problem, edit `lib/my-problem.ts`.
 
@@ -23,7 +23,7 @@ There is no backend. The data is made up (`lib/data.ts`), and your orders and an
 
 ```
 app/            offers/  orders/  proposal/  (dashboard/ and issues/ are placeholders)
-components/     offer-card, offers-view, orders-view, order-form, app-header, bottom-nav
+components/     offer-card, handled-row, suggestion, offers-view, orders-view, order-form, app-header, bottom-nav
 lib/
   orders.ts     checks an offer against the orders, describes orders in plain English, suggests new ones
   store.ts      the demo state in localStorage

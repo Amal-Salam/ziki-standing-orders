@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, Check, X } from "lucide-react";
+import AgentReads from "@/components/agent-reads";
 import ResetDemo from "@/components/reset-demo";
 import { DEFAULT_HOLD_MINUTES } from "@/lib/data";
 import { MY_PROBLEM } from "@/lib/my-problem";
@@ -19,18 +20,19 @@ const WITH = [
   "Ziki checks each offer against them the moment it arrives. Most offers are answered without you.",
   `The rest come to an Offers page in Ziki, held for ${DEFAULT_HOLD_MINUTES} minutes with the agent’s plan, and you approve or decline in one tap.`,
   "Each answer can become a new order, so you’re asked less over time. Every decision names the order or person behind it.",
+  "A waiting offer reaches you as a notification with Approve and Decline on it, so most days you never open the page.",
 ];
 
 const CHANGES = [
   {
     title: "Standing orders",
-    text: "A short list of rules: go ahead, ask me or turn down, by issue type, area, severity and estimate. Checked from the top, with a dry run that shows how the sample offers would go before you trust it.",
+    text: "A short list grouped by what each order does: go ahead without asking, ask me first, never take. Orders match on issue type, area, severity and estimate. If two match, “never” wins, then the newest. A collapsed preview shows how the sample offers would go.",
     href: "/orders",
     cta: "Open Standing orders",
   },
   {
     title: "An Offers page",
-    text: "Offers that need you, at the top with a countdown, then everything Ziki handled for you today, each with the order that decided it and why. Undo with “release it” or “take it anyway”.",
+    text: "Only offers that need you are cards: why you’re asked, the agent’s plan, and Approve or Decline, one tap each. Everything Ziki handled is a collapsed log line naming the order that decided it, with an undo. When nothing needs you, the page says so.",
     href: "/offers",
     cta: "Open Offers",
   },
@@ -38,11 +40,11 @@ const CHANGES = [
     title: "Offers wait for a person",
     text: `When no order covers an offer, Ziki holds it for the owner (${DEFAULT_HOLD_MINUTES} minutes by default) instead of letting it lapse after 60 seconds. Offers that a rule answers still take under a second.`,
     href: "/offers",
-    cta: "Simulate an offer",
+    cta: "Send a sample offer",
   },
   {
     title: "Your answers become orders",
-    text: "Approve an offer and Ziki offers to go ahead on ones like it next time. Decline it with a reason (too big, not my area, too risky) and Ziki offers the matching “turn down” order.",
+    text: "After you answer, Ziki offers the order that would answer offers like it next time, as a button named after the order. One tap adds it, or ignore it and nothing changes.",
     href: "/offers",
     cta: "Try it on the waiting offer",
   },
@@ -147,6 +149,7 @@ export default function ProposalPage() {
           </li>
           <li>Each claim records what authorized it: the order’s name, or the person who approved it.</li>
         </ul>
+        <AgentReads />
       </section>
 
       <section className="space-y-2">

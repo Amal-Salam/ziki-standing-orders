@@ -24,7 +24,17 @@ const pill = (on: boolean) =>
 const field = "rounded-[10px] border border-zk-border bg-zk-seg px-3 py-2 text-sm text-zk-text";
 
 /** Build or edit one standing order, with a live sentence and the sample offers it would cover. */
-export default function OrderForm({ initial, onSave, onCancel }: { initial?: Order; onSave: (o: Order) => void; onCancel: () => void }) {
+export default function OrderForm({
+  initial,
+  onSave,
+  onCancel,
+  onDelete,
+}: {
+  initial?: Order;
+  onSave: (o: Order) => void;
+  onCancel: () => void;
+  onDelete?: () => void;
+}) {
   const [o, setO] = useState<Order>(initial ?? blank());
   const set = (change: Partial<Order>) => setO((x) => ({ ...x, ...change }));
   const num = (v: string) => (v === "" ? undefined : Math.max(0, Number(v)));
@@ -110,11 +120,16 @@ export default function OrderForm({ initial, onSave, onCancel }: { initial?: Ord
 
       <div className="flex gap-2">
         <button type="submit" className="rounded-[10px] bg-zk-blue px-4 py-2 text-sm font-semibold text-white">
-          {initial ? "Save order" : "Add to the top"}
+          {initial ? "Save order" : "Add order"}
         </button>
         <button type="button" onClick={onCancel} className="rounded-[10px] px-4 py-2 text-sm text-zk-text2">
           Cancel
         </button>
+        {onDelete && (
+          <button type="button" onClick={onDelete} className="ml-auto rounded-[10px] px-4 py-2 text-sm font-semibold text-zk-bad-fg">
+            Delete
+          </button>
+        )}
       </div>
     </form>
   );

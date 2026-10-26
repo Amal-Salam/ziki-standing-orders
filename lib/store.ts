@@ -10,7 +10,7 @@ export type State = {
   orders: Order[];
   /** Newest first. */
   offers: OfferState[];
-  /** The next offer in QUEUE that "Simulate an offer" sends. */
+  /** The next offer in QUEUE that "Send a sample offer" sends. */
   next: number;
   holdMinutes: number;
 };
@@ -85,13 +85,14 @@ export const actions = {
     return result;
   },
   approve: (id: string) => patchOffer(id, { outcome: "accepted", by: "you", decidedAt: Date.now(), heldUntil: undefined }),
-  decline: (id: string, reason: string) => patchOffer(id, { outcome: "declined", by: "you", reason, decidedAt: Date.now(), heldUntil: undefined }),
+  decline: (id: string, reason?: string) => patchOffer(id, { outcome: "declined", by: "you", reason, decidedAt: Date.now(), heldUntil: undefined }),
   expire: (id: string) => patchOffer(id, { outcome: "expired", by: "timeout", decidedAt: Date.now(), heldUntil: undefined }),
   release: (id: string) => patchOffer(id, { outcome: "released", by: "you", decidedAt: Date.now() }),
 
-  addOrder(order: Order, where: "top" | "bottom" = "top") {
+  /** New orders go first: the newest order wins when two match. */
+  addOrder(order: Order) {
     const s = load();
-    set({ ...s, orders: where === "top" ? [order, ...s.orders] : [...s.orders, order] });
+    set({ ...s, orders: [order, ...s.orders] });
   },
   updateOrder(id: string, change: Partial<Order>) {
     const s = load();
@@ -100,15 +101,6 @@ export const actions = {
   removeOrder(id: string) {
     const s = load();
     set({ ...s, orders: s.orders.filter((o) => o.id !== id) });
-  },
-  moveOrder(id: string, by: -1 | 1) {
-    const s = load();
-    const i = s.orders.findIndex((o) => o.id === id);
-    const j = i + by;
-    if (i < 0 || j < 0 || j >= s.orders.length) return;
-    const orders = [...s.orders];
-    [orders[i], orders[j]] = [orders[j], orders[i]];
-    set({ ...s, orders });
   },
   setHold: (holdMinutes: number) => set({ ...load(), holdMinutes }),
   reset: () => set(seed()),
