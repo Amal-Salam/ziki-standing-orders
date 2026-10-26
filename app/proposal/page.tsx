@@ -78,7 +78,7 @@ export default function ProposalPage() {
 
       {MY_PROBLEM.length > 0 && (
         <section className="space-y-2">
-          <h2 className="font-display text-xl font-bold text-zk-text">My problem</h2>
+          <h2 className="font-display text-xl font-bold text-zk-text">What I found</h2>
           {MY_PROBLEM.map((p) => (
             <p key={p}>{p}</p>
           ))}
