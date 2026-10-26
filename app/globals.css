@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+/* Ziki's own dark tokens (read from ziki.dev), so the mock-up looks the same. */
+:root {
+  --zk-bg: #070f22;
+  --zk-surface: #0e1a33;
+  --zk-text: #e8eef9;
+  --zk-text2: #b7c3da;
+  --zk-muted: #93a0b8;
+  --zk-border: #22324f;
+  --zk-divider: #1a2844;
+  --zk-tint: #15284a;
+  --zk-chip: #1b2a47;
+  --zk-seg: #0a1530;
+  --zk-accent: #8fc9ff;
+  --zk-blue: #2e6fef;
+  --zk-ok-bg: #0f3326;
+  --zk-ok-fg: #6ee7a8;
+  --zk-bad-bg: #3a1517;
+  --zk-bad-fg: #fca5a0;
+  --zk-bad-bd: #6b2a27;
+  --zk-warn-bg: #3a2c0c;
+  --zk-warn-fg: #f6cf6b;
+  --zk-warn-bd: #6b5216;
+  --zk-info-bg: #14294f;
+  --zk-info-fg: #9cc2ff;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-zk-bg: var(--zk-bg);
+  --color-zk-surface: var(--zk-surface);
+  --color-zk-text: var(--zk-text);
+  --color-zk-text2: var(--zk-text2);
+  --color-zk-muted: var(--zk-muted);
+  --color-zk-border: var(--zk-border);
+  --color-zk-divider: var(--zk-divider);
+  --color-zk-tint: var(--zk-tint);
+  --color-zk-chip: var(--zk-chip);
+  --color-zk-seg: var(--zk-seg);
+  --color-zk-accent: var(--zk-accent);
+  --color-zk-blue: var(--zk-blue);
+  --color-zk-ok-bg: var(--zk-ok-bg);
+  --color-zk-ok-fg: var(--zk-ok-fg);
+  --color-zk-bad-bg: var(--zk-bad-bg);
+  --color-zk-bad-fg: var(--zk-bad-fg);
+  --color-zk-bad-bd: var(--zk-bad-bd);
+  --color-zk-warn-bg: var(--zk-warn-bg);
+  --color-zk-warn-fg: var(--zk-warn-fg);
+  --color-zk-warn-bd: var(--zk-warn-bd);
+  --color-zk-info-bg: var(--zk-info-bg);
+  --color-zk-info-fg: var(--zk-info-fg);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-manrope), var(--font-inter), ui-sans-serif, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+body {
+  background: var(--zk-bg);
+  color: var(--zk-text);
+}
+
+/* A new offer slides in at the top of the list. */
+@keyframes arrive {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: none; }
+}
+.animate-arrive { animation: arrive 0.35s ease-out both; }
+
+/* The "checking your standing orders" line while Ziki decides. */
+@keyframes scan {
+  from { background-position: -200% 0; }
+  to { background-position: 200% 0; }
+}
+.animate-scan {
+  background: linear-gradient(90deg, transparent, rgba(143, 201, 255, 0.25), transparent) no-repeat;
+  background-size: 50% 100%;
+  animation: scan 1.1s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-arrive, .animate-scan { animation: none; }
+}
