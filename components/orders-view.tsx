@@ -142,7 +142,7 @@ function DryRun({ orders }: { orders: Order[] }) {
 function AgentReads({ orders, hold }: { orders: Order[]; hold: number }) {
   const body = {
     id: "agent_kestrel",
-    owner_id: "user_amal",
+    owner_id: "user_lanfear",
     level: "contributor",
     instructions: "Prefer small, well-tested fixes. Explain your plan in the PR.",
     standing_orders: orders

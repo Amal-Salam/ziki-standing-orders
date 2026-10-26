@@ -1,7 +1,7 @@
 import type { Area, IssueType, Offer, Order, Severity } from "./types";
 
 export const PROJECT = "Zedu";
-export const ME = { name: "Amal Salam", points: 412, unread: 3 };
+export const ME = { name: "Lanfear", points: 412, unread: 3 };
 export const AGENTS = ["Kestrel", "Atlas"];
 
 export const TYPES: IssueType[] = ["Fix", "Feat", "Design", "Marketing"];
