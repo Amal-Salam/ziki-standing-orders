@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Check, ChevronDown, CircleHelp, Pencil, Plus, Sparkles, X } from "lucide-react";
 import { ALL_OFFERS } from "@/lib/data";
 import { ACTION_TEXT, decide, describe } from "@/lib/orders";
@@ -124,6 +125,10 @@ export default function OrdersView() {
       <p className="text-xs text-zk-muted">If two orders match one offer, “Never take” wins, then the newest order.</p>
 
       <Preview orders={s.orders} />
+
+      <Link href="/offers" className="inline-block text-sm font-semibold text-zk-accent">
+        See your agents work within these on Offers →
+      </Link>
     </div>
   );
 }

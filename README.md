@@ -37,4 +37,4 @@ npm install
 npm run dev
 ```
 
-Then open http://localhost:3000.
+Then open http://localhost:3000. It opens on Standing orders (`/orders`); Offers (`/offers`) shows them at work.

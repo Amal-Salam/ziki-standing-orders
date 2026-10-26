@@ -17,7 +17,7 @@ export default function AppHeader() {
   return (
     <header className="relative z-40 border-b border-zk-border bg-zk-surface lg:sticky lg:top-0">
       <div className="mx-auto flex h-[60px] max-w-[1400px] items-center gap-3 px-3 sm:px-6">
-        <Link href="/offers" aria-label="Ziki" className="flex items-center gap-1.5">
+        <Link href="/orders" aria-label="Ziki" className="flex items-center gap-1.5">
           <ZikiLogo />
         </Link>
         <span className="h-5 w-px bg-zk-border" />

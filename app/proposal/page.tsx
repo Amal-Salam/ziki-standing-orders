@@ -53,7 +53,7 @@ const CHANGES = [
 export default function ProposalPage() {
   return (
     <article className="mx-auto max-w-3xl space-y-8 pb-8 text-[15px] leading-relaxed text-zk-text2">
-      <Link href="/offers" className="inline-flex items-center gap-2 text-sm font-semibold text-zk-accent">
+      <Link href="/orders" className="inline-flex items-center gap-2 text-sm font-semibold text-zk-accent">
         <ArrowLeft className="size-4" /> Back to the mock-up
       </Link>
 
