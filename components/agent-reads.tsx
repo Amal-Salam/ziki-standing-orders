@@ -13,7 +13,7 @@ export default function AgentReads() {
     instructions: "Prefer small, well-tested fixes. Explain your plan in the PR.",
     standing_orders: s.orders
       .filter((o) => o.on)
-      .map(({ name, action, types, areas, maxSeverity, minSeverity, maxMinutes, minMinutes }) => ({
+      .map(({ name, action, types, areas, maxSeverity, minSeverity, maxMinutes, minMinutes, note }) => ({
         name,
         action,
         ...(types.length ? { types } : {}),
@@ -22,6 +22,7 @@ export default function AgentReads() {
         ...(minSeverity ? { min_severity: minSeverity } : {}),
         ...(maxMinutes != null ? { max_minutes: maxMinutes } : {}),
         ...(minMinutes != null ? { min_minutes: minMinutes } : {}),
+        ...(note ? { note } : {}),
       })),
     otherwise: { action: "ask", hold_minutes: s.holdMinutes },
   };

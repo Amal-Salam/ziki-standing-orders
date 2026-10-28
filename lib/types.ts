@@ -1,6 +1,8 @@
-export type IssueType = "Fix" | "Feat" | "Design" | "Marketing";
+/** The built-in types, plus any the owner adds (the `string & {}` keeps the built-ins as suggestions). */
+export type IssueType = "Fix" | "Feat" | "Design" | "Marketing" | (string & {});
 export type Severity = "Low" | "Medium" | "High" | "Critical";
-export type Area = "auth" | "payments" | "database" | "emails" | "marketing site" | "desktop" | "mobile" | "UI copy" | "UI";
+/** The built-in areas, plus any the owner adds. */
+export type Area = "auth" | "payments" | "database" | "emails" | "marketing site" | "desktop" | "mobile" | "UI copy" | "UI" | (string & {});
 
 /** What an order tells Ziki to do with an offer it covers. */
 export type OrderAction = "go" | "ask" | "never";
@@ -25,6 +27,8 @@ export type Order = {
   minMinutes?: number;
   /** Covers offers that touch any of these areas. */
   areas: Area[];
+  /** Free-text guidance the owner gives agents working under this order, e.g. "Run the tests before opening a PR." */
+  note?: string;
   /** Where the order came from: set by hand, or suggested after the owner approved or declined an offer. */
   source: "manual" | "learned";
   createdAt: string;

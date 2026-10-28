@@ -26,8 +26,8 @@ export function decide(orders: Order[], offer: Offer): { action: OrderAction; or
 
 export const ACTION_TEXT: Record<OrderAction, string> = {
   go: "Go ahead",
-  ask: "Ask me",
-  never: "Turn down",
+  ask: "Ask me first",
+  never: "Never take",
 };
 
 const list = (xs: string[], joiner = "or") =>
@@ -39,8 +39,8 @@ export function describe(order: Order) {
   const what = order.types.length ? `${list(order.types)} issues` : "any issue";
   const head = `${verb} ${what}${order.areas.length ? ` touching ${list(order.areas)}` : ""}`;
   const parts = [head];
-  if (order.maxSeverity && order.maxSeverity !== "Critical") parts.push(`up to ${order.maxSeverity} severity`);
-  if (order.minSeverity && order.minSeverity !== "Low") parts.push(`${order.minSeverity} severity or above`);
+  const sev = severityLabel(order);
+  if (sev) parts.push(`${sev} severity`);
   if (order.minMinutes != null) parts.push(`estimated over ${order.minMinutes} min`);
   if (order.maxMinutes != null) parts.push(`estimated ${order.maxMinutes} min or less`);
   return parts.join(", ") + ".";
@@ -51,8 +51,8 @@ export function why(order: Order, offer: Offer) {
   const bits: string[] = [];
   if (order.areas.length) bits.push(`touches ${offer.areas.filter((a) => order.areas.includes(a)).join(", ")}`);
   if (order.types.length) bits.push(offer.type);
-  if (order.maxSeverity) bits.push(`${offer.severity} ≤ ${order.maxSeverity}`);
-  if (order.minSeverity) bits.push(`${offer.severity} ≥ ${order.minSeverity}`);
+  const sev = severityLabel(order);
+  if (sev) bits.push(`${offer.severity} in ${sev}`);
   if (order.maxMinutes != null) bits.push(`${offer.minutes} min ≤ ${order.maxMinutes} min`);
   if (order.minMinutes != null) bits.push(`${offer.minutes} min > ${order.minMinutes} min`);
   return bits.join(" · ") || "covers everything";
@@ -68,7 +68,7 @@ export const DECLINE_REASONS: { id: DeclineReason; label: (o: Offer) => string }
   { id: "other", label: () => "Something else" },
 ];
 
-const NOUN: Record<Offer["type"], string> = { Fix: "fixes", Feat: "features", Design: "design work", Marketing: "marketing work" };
+const NOUN: Record<string, string> = { Fix: "fixes", Feat: "features", Design: "design work", Marketing: "marketing work" };
 
 let n = 0;
 const newId = () => `o-${Date.now().toString(36)}-${n++}`;
@@ -94,7 +94,7 @@ export function suggestFromApprove(offer: Offer): Order {
   const cap = Math.ceil(offer.minutes / 15) * 15;
   return {
     id: newId(),
-    name: `Go ahead on ${offer.areas[0]} ${NOUN[offer.type]}`,
+    name: `Go ahead on ${offer.areas[0]} ${NOUN[offer.type] ?? `${offer.type} work`}`,
     on: true,
     action: "go",
     types: [offer.type],
@@ -104,4 +104,28 @@ export function suggestFromApprove(offer: Offer): Order {
     source: "learned",
     createdAt: today(),
   };
+}
+
+/** The order's conditions as short chips, e.g. ["Fix", "Marketing", "≤ Medium", "≤ 30m"]. Empty means it covers anything. */
+export function chips(order: Order) {
+  const out: string[] = [...order.types, ...order.areas];
+  const sev = severityLabel(order);
+  if (sev) out.push(sev);
+  if (order.maxMinutes != null) out.push(`≤ ${order.maxMinutes}m`);
+  if (order.minMinutes != null) out.push(`> ${order.minMinutes}m`);
+  return out;
+}
+
+/** The severities an order covers, as a range of indexes into SEVERITIES, or null when it covers every severity. */
+export function severityRange(order: Pick<Order, "minSeverity" | "maxSeverity">): [number, number] | null {
+  const lo = order.minSeverity ? rank(order.minSeverity) : 0;
+  const hi = order.maxSeverity ? rank(order.maxSeverity) : SEVERITIES.length - 1;
+  return lo === 0 && hi === SEVERITIES.length - 1 ? null : [lo, hi];
+}
+
+/** "High", "Low–Medium", or "" when the order covers every severity. */
+export function severityLabel(order: Pick<Order, "minSeverity" | "maxSeverity">) {
+  const r = severityRange(order);
+  if (!r) return "";
+  return r[0] === r[1] ? SEVERITIES[r[0]] : `${SEVERITIES[r[0]]}–${SEVERITIES[r[1]]}`;
 }

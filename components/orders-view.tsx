@@ -2,172 +2,234 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, ChevronDown, CircleHelp, Pencil, Plus, Sparkles, X } from "lucide-react";
+import { Check, ChevronDown, CircleHelp, Hourglass, Plus, Sparkles, X } from "lucide-react";
 import { ALL_OFFERS } from "@/lib/data";
-import { ACTION_TEXT, decide, describe } from "@/lib/orders";
+import { ACTION_TEXT, chips, decide } from "@/lib/orders";
 import { actions, useStore } from "@/lib/store";
 import type { Order, OrderAction } from "@/lib/types";
 import { ACTION_TONE, Chip, NewTag, Placeholder } from "./bits";
 import OrderForm from "./order-form";
 
-const GROUPS: { action: OrderAction; title: string; icon: React.ElementType; tone: string }[] = [
-  { action: "go", title: "Go ahead without asking", icon: Check, tone: "text-zk-ok-fg" },
-  { action: "ask", title: "Ask me first", icon: CircleHelp, tone: "text-zk-warn-fg" },
-  { action: "never", title: "Never take", icon: X, tone: "text-zk-bad-fg" },
+/** Each box says what happens to an offer it covers, in plain words, so the three read without a legend. */
+const BOXES: { action: OrderAction; hint: string; empty: string; icon: React.ElementType; head: string; badge: string; tile: string }[] = [
+  {
+    action: "go",
+    hint: "Your agents take these on their own.",
+    empty: "Add work your agents can just get on with.",
+    icon: Check,
+    head: "bg-zk-ok-bg text-zk-ok-fg",
+    badge: "bg-zk-ok-fg text-zk-surface",
+    tile: "border-zk-ok-fg/30",
+  },
+  {
+    action: "ask",
+    hint: "Your agents check with you first.",
+    empty: "Add work you want to approve yourself.",
+    icon: CircleHelp,
+    head: "bg-zk-warn-bg text-zk-warn-fg",
+    badge: "bg-zk-warn-fg text-zk-surface",
+    tile: "border-zk-warn-bd",
+  },
+  {
+    action: "never",
+    hint: "Your agents turn these down for you.",
+    empty: "Add work your agents should never touch.",
+    icon: X,
+    head: "bg-zk-bad-bg text-zk-bad-fg",
+    badge: "bg-zk-bad-fg text-zk-surface",
+    tile: "border-zk-bad-bd",
+  },
 ];
 
-/** The Standing orders page: the owner's orders grouped by what they do, so it reads at a glance. */
+type Editing = { id: string } | { add: OrderAction } | null;
+
+/** The Standing orders page: three boxes (go, ask, never), each holding its orders as short chips, readable at a glance. */
 export default function OrdersView() {
   const s = useStore();
-  const [editing, setEditing] = useState<string | "new" | null>(null);
+  const [editing, setEditing] = useState<Editing>(null);
   if (!s) return <Placeholder />;
 
+  const current = editing && "id" in editing ? s.orders.find((o) => o.id === editing.id) : undefined;
   const save = (o: Order) => {
-    if (editing === "new") actions.addOrder(o);
-    else actions.updateOrder(o.id, o);
+    if (current) actions.updateOrder(o.id, o);
+    else actions.addOrder(o);
     setEditing(null);
   };
-  const form = (initial?: Order) => (
-    <OrderForm
-      initial={initial}
-      onSave={save}
-      onCancel={() => setEditing(null)}
-      onDelete={
-        initial &&
-        (() => {
-          actions.removeOrder(initial.id);
-          setEditing(null);
-        })
-      }
-    />
-  );
+  const waiting = s.offers.filter((o) => o.outcome === "waiting").length;
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="flex items-center gap-2 text-sm text-zk-text2">
-            Zedu <span className="text-zk-muted">›</span> <span className="font-semibold text-zk-text">Standing orders</span> <NewTag />
-          </p>
-          <h1 className="mt-1 font-display text-2xl font-extrabold text-zk-text sm:text-3xl">Standing orders</h1>
-          <p className="mt-1 text-sm text-zk-text2">What your agents may take without asking you.</p>
-        </div>
-        {editing !== "new" && (
-          <button type="button" onClick={() => setEditing("new")} className="flex items-center gap-1.5 rounded-[10px] bg-zk-blue px-3 py-2 text-sm font-semibold text-white">
-            <Plus className="size-4" /> New order
-          </button>
-        )}
+    <div className="mx-auto max-w-[1080px] space-y-4">
+      <header>
+        <p className="flex items-center gap-2 text-xs text-zk-text2">
+          Zedu <span className="text-zk-muted">›</span> Standing orders <NewTag />
+        </p>
+        <h1 className="mt-1 font-display text-2xl font-extrabold text-zk-text">Standing orders</h1>
+        <p className="text-sm text-zk-text2">What your agents may do without you.</p>
       </header>
 
-      {editing === "new" && form()}
-
-      {GROUPS.map(({ action, title, icon: Icon, tone }) => {
-        const orders = s.orders.filter((o) => o.action === action);
-        return (
-          <section key={action} className="space-y-2">
-            <h2 className={`flex items-center gap-2 text-sm font-bold ${tone}`}>
-              <Icon className="size-4" /> {title}
-            </h2>
-            <ul className="overflow-hidden rounded-xl border border-zk-border bg-zk-surface">
-              {orders.map((o) =>
-                editing === o.id ? (
-                  <li key={o.id} className="border-b border-zk-divider p-2 last:border-0">
-                    {form(o)}
-                  </li>
-                ) : (
-                  <li key={o.id} className={`flex items-center gap-3 border-b border-zk-divider px-4 py-3 last:border-0 ${o.on ? "" : "opacity-50"}`}>
-                    <div className="min-w-0 flex-1">
-                      <p className="flex flex-wrap items-center gap-2 font-semibold text-zk-text">
-                        {o.name}
-                        {o.source === "learned" && (
-                          <Chip tone="info">
-                            <Sparkles className="size-3" /> from your answer
-                          </Chip>
-                        )}
-                      </p>
-                      <p className="text-sm text-zk-text2">{describe(o)}</p>
-                    </div>
-                    <Toggle order={o} />
+      <div className="grid gap-4 sm:grid-cols-3">
+        {BOXES.map(({ action, hint, empty, icon: Icon, head, badge, tile }, i) => {
+          const orders = s.orders.filter((o) => o.action === action);
+          return (
+            <section
+              key={action}
+              aria-label={ACTION_TEXT[action]}
+              style={{ animationDelay: `${i * 70}ms` }}
+              data-tone={action}
+              className="zk-box animate-pop flex min-h-80 flex-col overflow-hidden rounded-2xl border border-zk-border bg-zk-surface lg:aspect-square"
+            >
+              <header className={`zk-box-head flex items-center gap-3 px-4 py-3.5 ${head}`}>
+                <span className={`zk-box-icon flex size-9 shrink-0 items-center justify-center rounded-full ${badge}`}>
+                  <Icon className="size-5" strokeWidth={3} />
+                </span>
+                <div className="min-w-0">
+                  <h2 className="text-lg leading-tight font-extrabold">{ACTION_TEXT[action]}</h2>
+                  <p className="text-xs font-medium opacity-80">{hint}</p>
+                </div>
+                {orders.length > 0 && (
+                  <span key={orders.length} className="animate-boop ml-auto rounded-full bg-zk-surface/70 px-2 text-xs font-bold">
+                    {orders.length}
+                  </span>
+                )}
+              </header>
+              <div className="flex flex-1 flex-col gap-2.5 p-3">
+                {orders.map((o) => {
+                  const on = editing && "id" in editing && editing.id === o.id;
+                  const cs = chips(o);
+                  return (
                     <button
+                      key={`${o.id}:${o.action}:${cs.join()}:${o.on}:${o.note ?? ""}`}
                       type="button"
-                      aria-label={`Edit ${o.name}`}
-                      onClick={() => setEditing(o.id)}
-                      className="flex size-8 items-center justify-center rounded-lg text-zk-text2 hover:bg-zk-chip hover:text-zk-text"
+                      title={o.note ? `${o.name}\n\n${o.note}` : o.name}
+                      onClick={() => setEditing(on ? null : { id: o.id })}
+                      className={`zk-tile animate-pop flex flex-wrap gap-1.5 rounded-xl border bg-zk-seg p-3 text-left ${tile} ${on ? "ring-2 ring-zk-accent" : ""} ${o.on ? "" : "opacity-45"}`}
                     >
-                      <Pencil className="size-4" />
+                      {o.source === "learned" && <Sparkles className="animate-twinkle size-3.5 text-zk-info-fg" aria-label="From your answer" />}
+                      {(cs.length ? cs : ["anything"]).map((c) => (
+                        <span key={c} className="rounded-md bg-zk-surface px-2 py-0.5 text-sm font-semibold text-zk-text">
+                          {c}
+                        </span>
+                      ))}
+                      {o.note && <p className="line-clamp-4 w-full text-sm leading-snug whitespace-pre-line text-zk-text2">{o.note}</p>}
+                      <span className="sr-only">Edit {o.name}</span>
                     </button>
-                  </li>
-                ),
-              )}
-              {action === "ask" && (
-                <li className="flex flex-wrap items-center gap-x-2 gap-y-1 px-4 py-3 text-sm text-zk-text2">
-                  <b className="text-zk-text">Anything else</b> is held for you for
-                  <select
-                    value={s.holdMinutes}
-                    onChange={(e) => actions.setHold(Number(e.target.value))}
-                    aria-label="How long to hold offers"
-                    className="rounded-lg border border-zk-border bg-zk-seg px-2 py-1 text-zk-text"
-                  >
-                    {[5, 10, 15, 30].map((m) => (
-                      <option key={m} value={m}>
-                        {m} min
-                      </option>
-                    ))}
-                  </select>
-                </li>
-              )}
-              {orders.length === 0 && action !== "ask" && <li className="px-4 py-3 text-sm text-zk-muted">None yet.</li>}
-            </ul>
-          </section>
-        );
-      })}
+                  );
+                })}
+                {orders.length === 0 && <p className="px-1 pt-1 text-sm text-zk-muted">{empty}</p>}
+                <button
+                  type="button"
+                  aria-label={`Add a “${ACTION_TEXT[action]}” order`}
+                  onClick={() => setEditing({ add: action })}
+                  className="zk-add mt-auto flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-zk-border py-2.5 text-sm font-semibold text-zk-muted"
+                >
+                  <Plus className="size-4" /> Add
+                </button>
+              </div>
+            </section>
+          );
+        })}
+      </div>
 
-      <p className="text-xs text-zk-muted">If two orders match one offer, “Never take” wins, then the newest order.</p>
+      {editing && (
+        <div key={"id" in editing ? editing.id : `add-${editing.add}`} className="animate-arrive">
+          <OrderForm
+            initial={current}
+            action={"add" in editing ? editing.add : undefined}
+            onSave={save}
+            onCancel={() => setEditing(null)}
+            onDelete={
+              current &&
+              (() => {
+                actions.removeOrder(current.id);
+                setEditing(null);
+              })
+            }
+          />
+        </div>
+      )}
 
-      <Preview orders={s.orders} />
+      {/* Smaller tiles staggered under the boxes (3, then 2 sitting in the gaps, then 1): the rest, the test, anything waiting. */}
+      <div className="grid items-start gap-4 md:grid-cols-6">
+        <div className="flex min-h-12 flex-wrap items-center gap-x-3 gap-y-1.5 rounded-2xl border border-zk-border bg-zk-surface px-3 py-2 text-sm text-zk-text2 md:col-span-3 xl:col-span-2 xl:col-start-2">
+          <span className="flex items-center gap-1.5" title="Offers no order covers wait this long for your answer">
+            <Hourglass className="size-4 text-zk-accent" /> <b className="text-zk-text">Hold the rest</b>
+          </span>
+          <div role="radiogroup" aria-label="How long to hold offers no order covers" className="ml-auto flex items-center rounded-full bg-zk-seg p-0.5">
+            {[5, 10, 15, 30].map((m) => {
+              const on = s.holdMinutes === m;
+              return (
+                <button
+                  key={m}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  onClick={() => actions.setHold(m)}
+                  className={`zk-pick rounded-full px-2.5 py-1 text-xs font-bold tabular-nums transition-colors ${on ? "bg-zk-accent text-zk-surface shadow-sm" : "text-zk-muted hover:text-zk-text"}`}
+                >
+                  {m}
+                </button>
+              );
+            })}
+            <span className="px-1.5 text-xs text-zk-muted">min</span>
+          </div>
+        </div>
 
-      <Link href="/offers" className="inline-block text-sm font-semibold text-zk-accent">
-        See your agents work within these on Offers →
-      </Link>
+        <Preview orders={s.orders} />
+
+        {waiting > 0 && (
+          <Link href="/offers" className="flex min-h-12 items-center md:col-span-4 md:col-start-2 xl:col-span-2 xl:col-start-3 justify-between rounded-2xl border border-zk-warn-bd bg-zk-warn-bg px-3 py-2 text-sm font-semibold text-zk-warn-fg">
+            {waiting} offer{waiting > 1 ? "s" : ""} waiting on you <span aria-hidden className="animate-nudge">→</span>
+          </Link>
+        )}
+      </div>
+
+      <p className="text-center text-[11px] text-zk-muted">If two orders match, Never wins, then the newest.</p>
     </div>
   );
 }
 
-function Toggle({ order: o }: { order: Order }) {
-  return (
-    <label className="flex cursor-pointer items-center" title={o.on ? "On" : "Off"}>
-      <input type="checkbox" checked={o.on} onChange={() => actions.updateOrder(o.id, { on: !o.on })} className="peer sr-only" />
-      <span className="relative h-5 w-9 rounded-full bg-zk-chip transition peer-checked:bg-zk-blue after:absolute after:top-0.5 after:left-0.5 after:size-4 after:rounded-full after:bg-white after:transition peer-checked:after:translate-x-4" />
-      <span className="sr-only">
-        {o.on ? "Turn off" : "Turn on"} {o.name}
-      </span>
-    </label>
-  );
-}
-
-/** How the sample offers would go under the orders as they are now. Collapsed: the totals are usually enough. */
+/**
+ * Last week's offers replayed through the orders as they are now, so the owner sees what a change would have done.
+ * (In the mock-up "last week" is the sample offers.) Three labelled counts, with the list a tap away.
+ */
 function Preview({ orders }: { orders: Order[] }) {
   const rows = ALL_OFFERS.map((offer) => ({ offer, ...decide(orders, offer) }));
   const n = (a: OrderAction) => rows.filter((r) => r.action === a).length;
   return (
-    <details className="group rounded-xl border border-zk-border bg-zk-surface">
-      <summary className="flex cursor-pointer list-none flex-wrap items-center gap-x-2 gap-y-1 px-4 py-3 text-sm text-zk-text2">
-        <ChevronDown className="size-4 -rotate-90 transition group-open:rotate-0" />
-        <span className="font-semibold text-zk-text">Try them on {rows.length} sample offers:</span>
-        <span>
-          <b className="text-zk-ok-fg">{n("go")} go ahead</b> · <b className="text-zk-warn-fg">{n("ask")} ask you</b> ·{" "}
-          <b className="text-zk-bad-fg">{n("never")} never</b>
+    <details className="group rounded-2xl border border-zk-border bg-zk-surface md:col-span-3 xl:col-span-2 xl:col-start-4 open:md:col-span-6 open:md:col-start-1">
+      <summary className="flex min-h-12 cursor-pointer list-none flex-wrap items-center gap-1.5 px-3 py-2 text-sm">
+        <b className="whitespace-nowrap text-zk-text" title={`Last week's ${rows.length} offers, run through your orders as they are now`}>
+          Last week
+        </b>
+        <span className="ml-auto flex gap-1">
+          <Count key={`go${n("go")}`} tone="ok" n={n("go")} label="taken" />
+          <Count key={`ask${n("ask")}`} tone="warn" n={n("ask")} label="asked" />
+          <Count key={`never${n("never")}`} tone="bad" n={n("never")} label="declined" />
         </span>
+        <ChevronDown className="size-4 shrink-0 text-zk-muted transition group-open:rotate-180" />
       </summary>
       <div className="border-t border-zk-divider">
-        {rows.map(({ offer, action, order }) => (
-          <div key={offer.id} className="flex items-center gap-3 border-b border-zk-divider px-4 py-2.5 text-sm last:border-0">
+        <p className="bg-zk-seg px-3 py-2 text-xs text-zk-text2">
+          Your agents got {rows.length} offers last week. Here’s what your orders, as they are now, would have done with each.
+        </p>
+        {rows.map(({ offer, action }) => (
+          <div key={offer.id} className="flex items-center gap-3 border-b border-zk-divider px-3 py-2 text-xs last:border-0">
             <p className="min-w-0 flex-1 truncate text-zk-text">{offer.title}</p>
-            <p className="hidden shrink-0 text-xs text-zk-muted sm:block">{order ? order.name : "no order covers it"}</p>
             <Chip tone={ACTION_TONE[action]}>{ACTION_TEXT[action]}</Chip>
           </div>
         ))}
       </div>
     </details>
+  );
+}
+
+/** A count that boops whenever its number changes (the key remounts it). */
+function Count({ tone, n, label }: { tone: "ok" | "warn" | "bad"; n: number; label: string }) {
+  return (
+    <span className="animate-boop inline-flex whitespace-nowrap">
+      <Chip tone={tone}>
+        {n} {label}
+      </Chip>
+    </span>
   );
 }
